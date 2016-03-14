@@ -3,5 +3,5 @@ extern crate rumble;
 use rumble::{ connect };
 
 fn main() {
-    connect("localhost:64738");
+    connect("92k.de:64738");
 }

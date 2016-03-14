@@ -15,10 +15,32 @@ fn encode_version(major: u16, minor: u8, patch: u8) -> u32 {
 
 pub fn connect(url: &str) {
     let mut stream = TcpStream::connect(url).unwrap();
-    let mut version = mumble::Version::new();
+    {
+        let mut output_stream = protobuf::CodedOutputStream::new(&mut stream);
+        let mut version = mumble::Version::new();
+        version.set_version(encode_version(1, 2, 7));
+        version.set_release(String::from("Rumble"));
+        let result = version.write_to_with_cached_sizes(&mut output_stream);
+        println!("Sent Version, Status: {:?}", result);
+    }
+    {
+        let mut input_stream = protobuf::CodedInputStream::new(&mut stream);
+        let mut version = mumble::Version::new();
+        let result = version.merge_from(&mut input_stream);
+        println!("Received Version, Status: {:?}, Data: {:?}", result, version);
+    }
+    {
+        let mut output_stream = protobuf::CodedOutputStream::new(&mut stream);
+        let mut authenticate = mumble::Authenticate::new();
+        authenticate.set_username(String::from("RumbleTestbot"));
+        let result = authenticate.write_to_with_cached_sizes(&mut output_stream);
+        println!("Sent Authenticate, Status: {:?}", result);
+    }
+    {
+        let mut input_stream = protobuf::CodedInputStream::new(&mut stream);
+        let mut crypt = mumble::CryptSetup::new();
+        let result = crypt.merge_from(&mut input_stream);
+        println!("Received Crypto, Status: {:?}, Data: {:?}", result, crypt);
+    }
 
-    let mut proto_stream = protobuf::CodedOutputStream::new(&mut stream);
-    version.set_version(encode_version(1, 2, 7));
-    version.set_release(String::from("Rumble"));
-    let _ = version.write_to_with_cached_sizes(&mut proto_stream);
 }
