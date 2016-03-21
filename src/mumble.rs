@@ -185,6 +185,7 @@ impl ::protobuf::Message for Version {
     fn merge_from(&mut self, is: &mut ::protobuf::CodedInputStream) -> ::protobuf::ProtobufResult<()> {
         while !try!(is.eof()) {
             let (field_number, wire_type) = try!(is.read_tag_unpack());
+            println!("{}", field_number);
             match field_number {
                 1 => {
                     if wire_type != ::protobuf::wire_format::WireTypeVarint {

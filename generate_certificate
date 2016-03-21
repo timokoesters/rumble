@@ -1,0 +1,15 @@
+#!/bin/sh
+echo -n "  Generating new certificate ... "
+openssl genrsa -out bot.key 2048 2> /dev/null
+openssl req -new -sha256 -key bot.key -out bot.csr -subj "/" 2> /dev/null
+openssl x509 -req -in bot.csr -signkey bot.key -out bot.crt 2> /dev/null
+rm bot.csr 2> /dev/null
+if [ -f bot.crt ] && [ -f bot.key ] ; then
+    echo -ne "\033[32mokay.\033[0m"
+    echo -e "\r\033[32m\xe2\x9c\x94\033[0m"
+else
+    echo -ne "\033[31munsuccessful!\033[0m"
+    echo -e "\r\033[31m\xe2\x9c\x98\033[0m"
+    echo -e "\033[31mIs openssl installed on your system?.\033[0m"
+    exit 1
+fi
