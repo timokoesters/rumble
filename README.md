@@ -3,6 +3,21 @@
 
 This is a native rust library for the easy creation of bots or other software supporting mumble.
 
+# Contributing
+
+## Running the examples
+
+You will need to generate a pair of certificate- and keyfile for the examples to work.
+You may do so by running the supplied script: ```user@machine ~/rumble> ./generate_certificate```.
+
+## Generating the protobuf bindings
+
+In order to generate the protobuf bindings from a newer version of the mumble.proto file you will need to run:
+```user@machine ~/rumble> protoc --rust_out src mumble.protoprotoc --rust_out src mumble.proto```.
+
+Please note that the protobuf tools as well as [rust-protobuf](https://github.com/stepancheg/rust-protobuf) need to be installed on your system in order to do so.
+
+
 # License
 
 The MIT License (MIT)
