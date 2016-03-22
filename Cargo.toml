@@ -9,9 +9,6 @@ path = "src/lib.rs"
 test = true
 doc = true
 
-[dependencies]
-protobuf = "1.0.18"
-
 [dependencies.openssl]
 git = "https://github.com/sfackler/rust-openssl.git"
 features = ["tlsv1_2", "tlsv1_1"]
