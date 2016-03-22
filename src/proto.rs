@@ -13,30 +13,28 @@ pub enum MessageType {
 ///
 /// Stores the a parsed semantic version.
 ///
-/// ## Fields
-///   - *major*: Major version.
-///   - *minor*: Minor version.
-///   - *patch*: Patchlevel.
 pub struct SemVer {
-    major: u16,
-    minor: u8,
-    patch: u8
+    /// Major version.
+    pub major: u16,
+    /// Minor version.
+    pub minor: u8,
+    /// Patchlevel.
+    pub patch: u8
 }
 
 /// # Protocol: Version Information
 ///
 /// Stores the version information transmitted from or to the server.
 ///
-/// ## Fields
-///   - *version*: Encoded version of the mumble protocol the client/server is supporting.
-///   - *release*: Exact release name of the software the other side is using.
-///   - *os*: Name of the operating system the client/server is running on.
-///   - *os_version*: Specific version of the operating system.
 pub struct ProtoVersion {
-    version: u32,
-    release: String,
-    os: String,
-    os_version: String
+    /// Encoded version of the mumble protocol the client/server is supporting.
+    pub version: u32,
+    /// Exact release name of the software the other side is using.
+    pub release: String,
+    /// Name of the operating system the client/server is running on.
+    pub os: String,
+    /// Specific version of the operating system.
+    pub os_version: String
 }
 
 impl ProtoVersion {
@@ -46,7 +44,7 @@ impl ProtoVersion {
             (version.patch as u32 & 0xFF);
     }
 
-    pub fn set_semver(&self, version: SemVer) {
+    pub fn set_semver(&mut self, version: SemVer) {
         let encoded = ProtoVersion::encode_version(version);
         self.version = encoded;
     }
