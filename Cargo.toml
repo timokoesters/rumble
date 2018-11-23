@@ -9,6 +9,5 @@ path = "src/lib.rs"
 test = true
 doc = true
 
-[dependencies.openssl]
-git = "https://github.com/sfackler/rust-openssl.git"
-features = ["tlsv1_2", "tlsv1_1"]
+[dependencies]
+openssl = "*"
