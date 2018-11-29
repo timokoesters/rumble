@@ -1,13 +1,9 @@
 [package]
 name = "rumble"
 version = "0.0.0"
-authors = ["Alexander Dmitriev", "Frederick Gnodtke <frederick@gnodtke.net>"]
-
-[lib]
-name = "rumble"
-path = "src/lib.rs"
-test = true
-doc = true
+authors = ["timokoesters", "Alexander Dmitriev", "Frederick Gnodtke <frederick@gnodtke.net>"]
 
 [dependencies]
 openssl = "*"
+protobuf = "*"
+byteorder = "*"
