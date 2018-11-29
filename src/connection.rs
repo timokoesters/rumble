@@ -53,7 +53,7 @@ impl Connection {
     }
 
     pub fn read(&mut self) -> Result<MessageType, std::io::Error> {
-        // The first two bytes of a message is the id/type of the message
+        // The first two bytes of a message represent the id/type of the message
         let mut id_bytes = [0; 2];
         self.stream
             .ssl_read(&mut id_bytes)
@@ -106,7 +106,7 @@ impl Connection {
     }
 
     pub fn send<M: Message + HasType>(&mut self, message: &M) {
-        // Create an stream to ouput this message
+        // Create a stream to output the message
         let mut output_stream = CodedOutputStream::new(&mut self.stream);
 
         // Create vector of bytes to output
@@ -124,8 +124,6 @@ impl Connection {
 
         // Append payload
         result.append(&mut payload);
-
-        //println!("Sending bytes: {:x?}", result);
 
         // Send bytes
         output_stream.write_raw_bytes(&result).unwrap();
