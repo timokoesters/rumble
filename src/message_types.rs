@@ -1,3 +1,5 @@
+use byteorder::{BigEndian, WriteBytesExt};
+use message_types::MessageType::*;
 use mumble;
 use protobuf::{CodedInputStream, Message, ProtobufResult};
 
@@ -39,7 +41,6 @@ impl MessageType {
     }
 
     pub fn from_raw(id: u16, payload: &[u8]) -> MessageType {
-        use message_types::MessageType::*;
         match id {
             0 => Version(Self::interpret_message::<mumble::Version>(&payload).unwrap()),
             1 => UDPTunnel,
@@ -86,164 +87,55 @@ impl MessageType {
             _ => unreachable!(),
         }
     }
-}
 
-pub trait HasType {
-    fn get_id(&self) -> u16;
-}
-
-impl HasType for mumble::Version {
-    fn get_id(&self) -> u16 {
-        0
+    pub fn to_raw(&self) -> Vec<u8> {
+        match self {
+            Version(data) => Self::create_bytes(0, data),
+            Authenticate(data) => Self::create_bytes(2, data),
+            Ping(data) => Self::create_bytes(3, data),
+            Reject(data) => Self::create_bytes(4, data),
+            ServerSync(data) => Self::create_bytes(5, data),
+            ChannelRemove(data) => Self::create_bytes(6, data),
+            ChannelState(data) => Self::create_bytes(7, &**data),
+            UserRemove(data) => Self::create_bytes(8, data),
+            UserState(data) => Self::create_bytes(9, &**data),
+            BanList(data) => Self::create_bytes(10, data),
+            TextMessage(data) => Self::create_bytes(11, data),
+            PermissionDenied(data) => Self::create_bytes(12, data),
+            ACL(data) => Self::create_bytes(13, data),
+            QueryUsers(data) => Self::create_bytes(14, data),
+            CryptSetup(data) => Self::create_bytes(15, data),
+            ContextActionModify(data) => Self::create_bytes(16, data),
+            ContextAction(data) => Self::create_bytes(17, data),
+            UserList(data) => Self::create_bytes(18, data),
+            VoiceTarget(data) => Self::create_bytes(19, data),
+            PermissionQuery(data) => Self::create_bytes(20, data),
+            CodecVersion(data) => Self::create_bytes(21, data),
+            UserStats(data) => Self::create_bytes(22, &**data),
+            RequestBlob(data) => Self::create_bytes(23, data),
+            ServerConfig(data) => Self::create_bytes(24, data),
+            SuggestConfig(data) => Self::create_bytes(25, data),
+            _ => panic!("Cannot send this type of data"),
+        }
     }
-}
 
-impl HasType for mumble::UDPTunnel {
-    fn get_id(&self) -> u16 {
-        1
-    }
-}
+    fn create_bytes<M: Message>(id: u16, data: &M) -> Vec<u8> {
+        // Create vector of bytes to output
+        let mut result = Vec::new();
 
-impl HasType for mumble::Authenticate {
-    fn get_id(&self) -> u16 {
-        2
-    }
-}
+        // Append id
+        result.write_u16::<BigEndian>(id).unwrap();
 
-impl HasType for mumble::Ping {
-    fn get_id(&self) -> u16 {
-        3
-    }
-}
+        // Create payload from message
+        let mut payload = Vec::new();
+        data.write_to_vec(&mut payload).unwrap();
 
-impl HasType for mumble::Reject {
-    fn get_id(&self) -> u16 {
-        4
-    }
-}
+        // Append length
+        result.write_u32::<BigEndian>(payload.len() as u32).unwrap();
 
-impl HasType for mumble::ServerSync {
-    fn get_id(&self) -> u16 {
-        5
-    }
-}
+        // Append payload
+        result.append(&mut payload);
 
-impl HasType for mumble::ChannelRemove {
-    fn get_id(&self) -> u16 {
-        6
-    }
-}
-
-impl HasType for mumble::ChannelState {
-    fn get_id(&self) -> u16 {
-        7
-    }
-}
-
-impl HasType for mumble::UserRemove {
-    fn get_id(&self) -> u16 {
-        8
-    }
-}
-
-impl HasType for mumble::UserState {
-    fn get_id(&self) -> u16 {
-        9
-    }
-}
-
-impl HasType for mumble::BanList {
-    fn get_id(&self) -> u16 {
-        10
-    }
-}
-
-impl HasType for mumble::TextMessage {
-    fn get_id(&self) -> u16 {
-        11
-    }
-}
-
-impl HasType for mumble::PermissionDenied {
-    fn get_id(&self) -> u16 {
-        12
-    }
-}
-
-impl HasType for mumble::ACL {
-    fn get_id(&self) -> u16 {
-        13
-    }
-}
-
-impl HasType for mumble::QueryUsers {
-    fn get_id(&self) -> u16 {
-        14
-    }
-}
-
-impl HasType for mumble::CryptSetup {
-    fn get_id(&self) -> u16 {
-        15
-    }
-}
-
-impl HasType for mumble::ContextActionModify {
-    fn get_id(&self) -> u16 {
-        16
-    }
-}
-
-impl HasType for mumble::ContextAction {
-    fn get_id(&self) -> u16 {
-        17
-    }
-}
-
-impl HasType for mumble::UserList {
-    fn get_id(&self) -> u16 {
-        18
-    }
-}
-
-impl HasType for mumble::VoiceTarget {
-    fn get_id(&self) -> u16 {
-        19
-    }
-}
-
-impl HasType for mumble::PermissionQuery {
-    fn get_id(&self) -> u16 {
-        20
-    }
-}
-
-impl HasType for mumble::CodecVersion {
-    fn get_id(&self) -> u16 {
-        21
-    }
-}
-
-impl HasType for mumble::UserStats {
-    fn get_id(&self) -> u16 {
-        22
-    }
-}
-
-impl HasType for mumble::RequestBlob {
-    fn get_id(&self) -> u16 {
-        23
-    }
-}
-
-impl HasType for mumble::ServerConfig {
-    fn get_id(&self) -> u16 {
-        24
-    }
-}
-
-impl HasType for mumble::SuggestConfig {
-    fn get_id(&self) -> u16 {
-        25
+        result
     }
 }

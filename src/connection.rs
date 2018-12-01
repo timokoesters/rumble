@@ -1,6 +1,6 @@
-use byteorder::{BigEndian, ReadBytesExt, WriteBytesExt};
+use byteorder::{BigEndian, ReadBytesExt};
 use openssl::ssl::*;
-use protobuf::{CodedOutputStream, Message};
+use protobuf::CodedOutputStream;
 use std::io::{Cursor, Read};
 use std::net::TcpStream;
 use std::path::Path;
@@ -17,6 +17,7 @@ const TIMEOUT: u64 = 5;
 // How long to wait between pings
 const PING_DELAY: u64 = 10;
 
+/// A way to interact with the Mumble server
 pub struct Connection {
     stream: SslStream<TcpStream>,
     session: Option<u32>,
@@ -105,35 +106,19 @@ impl Connection {
         Ok(message)
     }
 
-    pub fn send<M: Message + HasType>(&mut self, message: &M) {
+    pub fn send(&mut self, message: &MessageType) {
         // Create a stream to output the message
         let mut output_stream = CodedOutputStream::new(&mut self.stream);
 
-        // Create vector of bytes to output
-        let mut result = Vec::new();
-
-        // Append id
-        result.write_u16::<BigEndian>(message.get_id()).unwrap();
-
-        // Create payload from message
-        let mut payload = Vec::new();
-        message.write_to_vec(&mut payload).unwrap();
-
-        // Append length
-        result.write_u32::<BigEndian>(payload.len() as u32).unwrap();
-
-        // Append payload
-        result.append(&mut payload);
-
         // Send bytes
-        output_stream.write_raw_bytes(&result).unwrap();
+        output_stream.write_raw_bytes(&message.to_raw()).unwrap();
         output_stream.flush().unwrap();
     }
 
     pub fn send_version(&mut self) {
         // Send version message
         let message = mumble::Version::new();
-        self.send(&message);
+        self.send(&Version(message));
     }
 
     pub fn send_authentication(&mut self, username: &str, password: &str) {
@@ -141,7 +126,7 @@ impl Connection {
         let mut message = mumble::Authenticate::new();
         message.set_username(username.to_string());
         message.set_password(password.to_string());
-        self.send(&message);
+        self.send(&Authenticate(message));
     }
 
     pub fn send_text_message(&mut self, text: &str) {
@@ -152,7 +137,7 @@ impl Connection {
                 message.set_actor(s);
                 message.set_channel_id(vec![0]);
                 message.set_message(text.to_string());
-                self.send(&message);
+                self.send(&TextMessage(message));
             }
             None => println!("Connection not established. (No session)"),
         }
@@ -165,7 +150,7 @@ impl Connection {
             message.set_session(s);
             message.set_actor(s);
             message.set_channel_id(channel_id);
-            self.send(&message)
+            self.send(&UserState(Box::new(message)));
         } else {
             println!("Connection not established. (No session)");
         }
@@ -187,7 +172,7 @@ impl Connection {
         let mut ping = mumble::Ping::new();
         ping.set_timestamp(timestamp);
         self.last_ping = timestamp;
-        self.send(&ping);
+        self.send(&Ping(ping));
     }
 
     pub fn get_users(&self) -> &Vec<mumble::UserState> {
