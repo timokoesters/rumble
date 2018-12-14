@@ -1,24 +1,24 @@
 extern crate rumble;
 
-use rumble::connection;
+use rumble::session;
 use rumble::message_types::MessageType::*;
 use std::path::Path;
 
 fn main() {
-    let mut connection = connection::connect(
+    let mut session = session::Session::connect(
         "localhost:64738",
         Path::new("bot.key"),
         Path::new("bot.crt"),
         "Bot",
-        "password",
+        Some("password"),
     );
 
     loop {
-        if let Ok(message) = connection.read() {
+        if let Some(message) = session.connection.read() {
             match message {
                 // Echo messages
                 TextMessage(data) => {
-                    connection.send_text_message(&format!("You said: {}", data.get_message()));
+                    session.send_text_message(&format!("You said: {}", data.get_message()));
                 }
 
                 // Ignore some messages
@@ -27,7 +27,7 @@ fn main() {
                 // Print unhandled messages
                 _ => println!("{:?}", message),
             }
-            connection.keep_alive();
         }
+        session.keep_alive();
     }
 }

@@ -1,8 +1,8 @@
 use byteorder::{BigEndian, WriteBytesExt};
-use message_types::MessageType::*;
-use mumble;
-use protobuf::{CodedInputStream, Message, ProtobufResult};
+use crate::mumble;
+use protobuf::{CodedInputStream, Message, ProtobufError, ProtobufResult};
 
+/// An enum which contains all possible messages bundled together with it's content.
 #[derive(Debug)]
 pub enum MessageType {
     Version(mumble::Version),
@@ -34,61 +34,67 @@ pub enum MessageType {
 }
 
 impl MessageType {
-    pub fn interpret_message<M: Message>(payload: &[u8]) -> ProtobufResult<M> {
+    /// Tries to interpret the supplied bytes as a message.
+    fn interpret_bytes<M: Message>(payload: &[u8]) -> ProtobufResult<M> {
         let mut message = M::new();
         M::merge_from(&mut message, &mut CodedInputStream::from_bytes(payload))?;
         Ok(message)
     }
 
-    pub fn from_raw(id: u16, payload: &[u8]) -> MessageType {
-        match id {
-            0 => Version(Self::interpret_message::<mumble::Version>(&payload).unwrap()),
+    /// Tries to interpret the supplied bytes as a message of type `id`.
+    pub fn from_raw(id: u16, payload: &[u8]) -> ProtobufResult<MessageType> {
+        use crate::message_types::MessageType::*;
+
+        Ok(match id {
+            0 => Version(Self::interpret_bytes::<mumble::Version>(&payload)?),
             1 => UDPTunnel,
-            2 => Authenticate(Self::interpret_message::<mumble::Authenticate>(&payload).unwrap()),
-            3 => Ping(Self::interpret_message::<mumble::Ping>(&payload).unwrap()),
-            4 => Reject(Self::interpret_message::<mumble::Reject>(&payload).unwrap()),
-            5 => ServerSync(Self::interpret_message::<mumble::ServerSync>(&payload).unwrap()),
-            6 => ChannelRemove(Self::interpret_message::<mumble::ChannelRemove>(&payload).unwrap()),
+            2 => Authenticate(Self::interpret_bytes::<mumble::Authenticate>(&payload)?),
+            3 => Ping(Self::interpret_bytes::<mumble::Ping>(&payload)?),
+            4 => Reject(Self::interpret_bytes::<mumble::Reject>(&payload)?),
+            5 => ServerSync(Self::interpret_bytes::<mumble::ServerSync>(&payload)?),
+            6 => ChannelRemove(Self::interpret_bytes::<mumble::ChannelRemove>(&payload)?),
             7 => ChannelState(Box::new(
-                Self::interpret_message::<mumble::ChannelState>(&payload).unwrap(),
+                Self::interpret_bytes::<mumble::ChannelState>(&payload)?,
             )),
-            8 => UserRemove(Self::interpret_message::<mumble::UserRemove>(&payload).unwrap()),
+            8 => UserRemove(Self::interpret_bytes::<mumble::UserRemove>(&payload)?),
             9 => UserState(Box::new(
-                Self::interpret_message::<mumble::UserState>(&payload).unwrap(),
+                Self::interpret_bytes::<mumble::UserState>(&payload)?,
             )),
-            10 => BanList(Self::interpret_message::<mumble::BanList>(&payload).unwrap()),
-            11 => TextMessage(Self::interpret_message::<mumble::TextMessage>(&payload).unwrap()),
+            10 => BanList(Self::interpret_bytes::<mumble::BanList>(&payload)?),
+            11 => TextMessage(Self::interpret_bytes::<mumble::TextMessage>(&payload)?),
             12 => PermissionDenied(
-                Self::interpret_message::<mumble::PermissionDenied>(&payload).unwrap(),
+                Self::interpret_bytes::<mumble::PermissionDenied>(&payload)?,
             ),
-            13 => ACL(Self::interpret_message::<mumble::ACL>(&payload).unwrap()),
-            14 => QueryUsers(Self::interpret_message::<mumble::QueryUsers>(&payload).unwrap()),
-            15 => CryptSetup(Self::interpret_message::<mumble::CryptSetup>(&payload).unwrap()),
+            13 => ACL(Self::interpret_bytes::<mumble::ACL>(&payload)?),
+            14 => QueryUsers(Self::interpret_bytes::<mumble::QueryUsers>(&payload)?),
+            15 => CryptSetup(Self::interpret_bytes::<mumble::CryptSetup>(&payload)?),
             16 => ContextActionModify(
-                Self::interpret_message::<mumble::ContextActionModify>(&payload).unwrap(),
+                Self::interpret_bytes::<mumble::ContextActionModify>(&payload)?,
             ),
             17 => {
-                ContextAction(Self::interpret_message::<mumble::ContextAction>(&payload).unwrap())
+                ContextAction(Self::interpret_bytes::<mumble::ContextAction>(&payload)?)
             }
-            18 => UserList(Self::interpret_message::<mumble::UserList>(&payload).unwrap()),
-            19 => VoiceTarget(Self::interpret_message::<mumble::VoiceTarget>(&payload).unwrap()),
+            18 => UserList(Self::interpret_bytes::<mumble::UserList>(&payload)?),
+            19 => VoiceTarget(Self::interpret_bytes::<mumble::VoiceTarget>(&payload)?),
             20 => PermissionQuery(
-                Self::interpret_message::<mumble::PermissionQuery>(&payload).unwrap(),
+                Self::interpret_bytes::<mumble::PermissionQuery>(&payload)?,
             ),
-            21 => CodecVersion(Self::interpret_message::<mumble::CodecVersion>(&payload).unwrap()),
+            21 => CodecVersion(Self::interpret_bytes::<mumble::CodecVersion>(&payload)?),
             22 => UserStats(Box::new(
-                Self::interpret_message::<mumble::UserStats>(&payload).unwrap(),
+                Self::interpret_bytes::<mumble::UserStats>(&payload)?,
             )),
-            23 => RequestBlob(Self::interpret_message::<mumble::RequestBlob>(&payload).unwrap()),
-            24 => ServerConfig(Self::interpret_message::<mumble::ServerConfig>(&payload).unwrap()),
+            23 => RequestBlob(Self::interpret_bytes::<mumble::RequestBlob>(&payload)?),
+            24 => ServerConfig(Self::interpret_bytes::<mumble::ServerConfig>(&payload)?),
             25 => {
-                SuggestConfig(Self::interpret_message::<mumble::SuggestConfig>(&payload).unwrap())
+                SuggestConfig(Self::interpret_bytes::<mumble::SuggestConfig>(&payload)?)
             }
             _ => unreachable!(),
-        }
+        })
     }
 
+    /// Turns the message into bytes which can be sent.
     pub fn to_raw(&self) -> Vec<u8> {
+        use crate::message_types::MessageType::*;
         match self {
             Version(data) => Self::create_bytes(0, data),
             Authenticate(data) => Self::create_bytes(2, data),
