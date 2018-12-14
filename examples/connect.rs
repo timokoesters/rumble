@@ -1,5 +1,3 @@
-extern crate rumble;
-
 use rumble::session;
 use rumble::message_types::MessageType::*;
 use std::path::Path;
