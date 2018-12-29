@@ -1,8 +1,8 @@
-use std::path::Path;
 use crate::connection::Connection;
 use crate::message_types::MessageType;
 use crate::message_types::MessageType::*;
 use crate::mumble;
+use std::path::Path;
 
 /// A struct that is able to connect to a Mumble server and interact with it.
 pub struct Session {
@@ -16,7 +16,13 @@ pub struct Session {
 
 impl Session {
     /// Returns a session that is connected to a Mumble server.
-    pub fn connect(url: &str, key: &Path, cert: &Path, username: &str, password: Option<&str>) -> Session {
+    pub fn connect(
+        url: &str,
+        key: &Path,
+        cert: &Path,
+        username: &str,
+        password: Option<&str>,
+    ) -> Session {
         let mut session = Self {
             connection: Connection::new(url, key, cert, username, password),
             session_id: 0,
@@ -34,13 +40,13 @@ impl Session {
                         session.session_id = data.get_session();
                         // The ServerSync message is the last message of the synchronization
                         break;
-                    },
+                    }
 
                     // Keep a list of all users
                     UserState(data) => {
                         // Add user
                         session.users.push(*data.clone());
-                    },
+                    }
 
                     // Ignore other messages
                     _ => {}
@@ -69,7 +75,7 @@ impl Session {
                     // Add user
                     self.users.push(*data.clone());
                 }
-            },
+            }
 
             // Ignore other messages
             _ => {}
@@ -124,5 +130,4 @@ impl Session {
     pub fn get_users(&self) -> &Vec<mumble::UserState> {
         &self.users
     }
-
 }

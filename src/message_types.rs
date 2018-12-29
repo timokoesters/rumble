@@ -1,5 +1,5 @@
-use byteorder::{BigEndian, WriteBytesExt};
 use crate::mumble;
+use byteorder::{BigEndian, WriteBytesExt};
 use protobuf::{CodedInputStream, Message, ProtobufResult};
 
 /// An enum which contains all possible messages bundled together with it's content.
@@ -53,41 +53,33 @@ impl MessageType {
             4 => Reject(Self::interpret_bytes::<mumble::Reject>(&payload)?),
             5 => ServerSync(Self::interpret_bytes::<mumble::ServerSync>(&payload)?),
             6 => ChannelRemove(Self::interpret_bytes::<mumble::ChannelRemove>(&payload)?),
-            7 => ChannelState(Box::new(
-                Self::interpret_bytes::<mumble::ChannelState>(&payload)?,
-            )),
+            7 => ChannelState(Box::new(Self::interpret_bytes::<mumble::ChannelState>(
+                &payload,
+            )?)),
             8 => UserRemove(Self::interpret_bytes::<mumble::UserRemove>(&payload)?),
-            9 => UserState(Box::new(
-                Self::interpret_bytes::<mumble::UserState>(&payload)?,
-            )),
+            9 => UserState(Box::new(Self::interpret_bytes::<mumble::UserState>(
+                &payload,
+            )?)),
             10 => BanList(Self::interpret_bytes::<mumble::BanList>(&payload)?),
             11 => TextMessage(Self::interpret_bytes::<mumble::TextMessage>(&payload)?),
-            12 => PermissionDenied(
-                Self::interpret_bytes::<mumble::PermissionDenied>(&payload)?,
-            ),
+            12 => PermissionDenied(Self::interpret_bytes::<mumble::PermissionDenied>(&payload)?),
             13 => ACL(Self::interpret_bytes::<mumble::ACL>(&payload)?),
             14 => QueryUsers(Self::interpret_bytes::<mumble::QueryUsers>(&payload)?),
             15 => CryptSetup(Self::interpret_bytes::<mumble::CryptSetup>(&payload)?),
-            16 => ContextActionModify(
-                Self::interpret_bytes::<mumble::ContextActionModify>(&payload)?,
-            ),
-            17 => {
-                ContextAction(Self::interpret_bytes::<mumble::ContextAction>(&payload)?)
-            }
+            16 => ContextActionModify(Self::interpret_bytes::<mumble::ContextActionModify>(
+                &payload,
+            )?),
+            17 => ContextAction(Self::interpret_bytes::<mumble::ContextAction>(&payload)?),
             18 => UserList(Self::interpret_bytes::<mumble::UserList>(&payload)?),
             19 => VoiceTarget(Self::interpret_bytes::<mumble::VoiceTarget>(&payload)?),
-            20 => PermissionQuery(
-                Self::interpret_bytes::<mumble::PermissionQuery>(&payload)?,
-            ),
+            20 => PermissionQuery(Self::interpret_bytes::<mumble::PermissionQuery>(&payload)?),
             21 => CodecVersion(Self::interpret_bytes::<mumble::CodecVersion>(&payload)?),
-            22 => UserStats(Box::new(
-                Self::interpret_bytes::<mumble::UserStats>(&payload)?,
-            )),
+            22 => UserStats(Box::new(Self::interpret_bytes::<mumble::UserStats>(
+                &payload,
+            )?)),
             23 => RequestBlob(Self::interpret_bytes::<mumble::RequestBlob>(&payload)?),
             24 => ServerConfig(Self::interpret_bytes::<mumble::ServerConfig>(&payload)?),
-            25 => {
-                SuggestConfig(Self::interpret_bytes::<mumble::SuggestConfig>(&payload)?)
-            }
+            25 => SuggestConfig(Self::interpret_bytes::<mumble::SuggestConfig>(&payload)?),
             _ => unreachable!(),
         })
     }

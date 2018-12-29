@@ -11,7 +11,6 @@ use crate::message_types::MessageType::*;
 use crate::message_types::*;
 use crate::mumble;
 
-
 /// A struct responsible for sending and receiving messages from the Mumble Server.
 pub struct Connection {
     stream: SslStream<TcpStream>,
@@ -19,20 +18,26 @@ pub struct Connection {
 
 impl Connection {
     /// Create a new connection to a Mumble server.
-    pub fn new(url: &str, key: &Path, cert: &Path, username: &str, password: Option<&str>) -> Connection {
+    pub fn new(
+        url: &str,
+        key: &Path,
+        cert: &Path,
+        username: &str,
+        password: Option<&str>,
+    ) -> Connection {
         // Setup TCP stream
         let ctx = Connection::setup_tls(key, cert).expect("Failed to setup TLS");
         let tcp = TcpStream::connect(url).expect("Invalid URL");
-        tcp.set_read_timeout(Some(std::time::Duration::from_secs(1))).unwrap();
-        tcp.set_write_timeout(Some(std::time::Duration::from_secs(1))).unwrap();
+        tcp.set_read_timeout(Some(std::time::Duration::from_secs(1)))
+            .unwrap();
+        tcp.set_write_timeout(Some(std::time::Duration::from_secs(1)))
+            .unwrap();
         let stream = Ssl::new(&ctx)
             .expect("Failed to construct Ssl")
             .connect(tcp)
             .expect("Failed to connect Ssl to the TCP stream");
 
-        let mut connection = Self {
-            stream,
-        };
+        let mut connection = Self { stream };
 
         connection.initialize(username, password);
         connection
@@ -65,15 +70,13 @@ impl Connection {
     pub fn read(&mut self) -> Option<MessageType> {
         // The first two bytes of a message represent the id/type of the message
         let mut id_bytes = [0; 2];
-        self.stream
-            .read_exact(&mut id_bytes).ok()?;
+        self.stream.read_exact(&mut id_bytes).ok()?;
 
         let id = Cursor::new(id_bytes).read_u16::<BigEndian>().unwrap();
 
         // The next four bytes specify the length of the message
         let mut length_bytes = [0; 4];
-        self.stream
-            .read_exact(&mut length_bytes).ok()?;
+        self.stream.read_exact(&mut length_bytes).ok()?;
 
         let length = Cursor::new(length_bytes).read_u32::<BigEndian>().unwrap();
 
@@ -93,7 +96,9 @@ impl Connection {
         let mut output_stream = CodedOutputStream::new(&mut self.stream);
 
         // Send bytes
-        output_stream.write_raw_bytes(&message.to_raw()).expect("Could not write bytes");
+        output_stream
+            .write_raw_bytes(&message.to_raw())
+            .expect("Could not write bytes");
         output_stream.flush().expect("Could not flush bytes");
     }
 }

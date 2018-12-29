@@ -1,5 +1,5 @@
-use rumble::session;
 use rumble::message_types::MessageType::*;
+use rumble::session;
 use std::path::Path;
 
 fn main() {
