@@ -1,6 +1,7 @@
 use byteorder::{BigEndian, ReadBytesExt};
 use openssl::ssl::*;
 use protobuf::CodedOutputStream;
+
 use std::io::{Cursor, Read};
 use std::net::TcpStream;
 use std::path::Path;
@@ -20,11 +21,14 @@ impl Connection {
     /// Create a new connection to a Mumble server.
     pub fn new(url: &str, key: &Path, cert: &Path, username: &str, password: Option<&str>) -> Connection {
         // Setup TCP stream
-        let ctx = Connection::setup_tls(key, cert);
+        let ctx = Connection::setup_tls(key, cert).expect("Failed to setup TLS");
         let tcp = TcpStream::connect(url).expect("Invalid URL");
         tcp.set_read_timeout(Some(std::time::Duration::from_secs(1))).unwrap();
         tcp.set_write_timeout(Some(std::time::Duration::from_secs(1))).unwrap();
-        let stream = Ssl::new(&ctx).unwrap().connect(tcp).unwrap();
+        let stream = Ssl::new(&ctx)
+            .expect("Failed to construct Ssl")
+            .connect(tcp)
+            .expect("Failed to connect Ssl to the TCP stream");
 
         let mut connection = Self {
             stream,
@@ -48,13 +52,13 @@ impl Connection {
     }
 
     /// Returns an SslContext that is setup with the supplied key and certificate.
-    fn setup_tls(key: &Path, cert: &Path) -> Arc<SslContext> {
-        let mut ctx = SslContext::builder(SslMethod::tls()).unwrap();
+    fn setup_tls(key: &Path, cert: &Path) -> Result<Arc<SslContext>, openssl::error::ErrorStack> {
+        let mut ctx = SslContext::builder(SslMethod::tls())?;
         ctx.set_verify(SslVerifyMode::NONE);
-        ctx.set_certificate_chain_file(cert).unwrap();
-        ctx.set_private_key_file(&key, SslFiletype::PEM).unwrap();
-        ctx.set_cipher_list("AES128-SHA:AES256-SHA").unwrap();
-        Arc::new(ctx.build())
+        ctx.set_certificate_chain_file(cert)?;
+        ctx.set_private_key_file(&key, SslFiletype::PEM)?;
+        ctx.set_cipher_list("AES128-SHA:AES256-SHA")?;
+        Ok(Arc::new(ctx.build()))
     }
 
     /// Returns a message received from the Mumble server if there is one.
@@ -89,7 +93,7 @@ impl Connection {
         let mut output_stream = CodedOutputStream::new(&mut self.stream);
 
         // Send bytes
-        output_stream.write_raw_bytes(&message.to_raw()).unwrap();
-        output_stream.flush().unwrap();
+        output_stream.write_raw_bytes(&message.to_raw()).expect("Could not write bytes");
+        output_stream.flush().expect("Could not flush bytes");
     }
 }

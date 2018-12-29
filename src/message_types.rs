@@ -1,6 +1,6 @@
 use byteorder::{BigEndian, WriteBytesExt};
 use crate::mumble;
-use protobuf::{CodedInputStream, Message, ProtobufError, ProtobufResult};
+use protobuf::{CodedInputStream, Message, ProtobufResult};
 
 /// An enum which contains all possible messages bundled together with it's content.
 #[derive(Debug)]
