@@ -5,6 +5,9 @@ authors = ["timokoesters", "Alexander Dmitriev", "Frederick Gnodtke <frederick@g
 edition = "2018"
 
 [dependencies]
-openssl = "*"
-protobuf = "*"
-byteorder = "*"
+openssl = "0.10.16"
+protobuf = "2.2.2"
+byteorder = "1.2.7"
+
+[build-dependencies]
+protoc-rust = "2.2.2"

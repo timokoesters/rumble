@@ -2,4 +2,5 @@ target
 Cargo.lock
 *.crt
 *.key
+src/mumble.rs
 doc/
