@@ -7,7 +7,6 @@ edition = "2018"
 [dependencies]
 openssl = "0.10.16"
 protobuf = "2.2.2"
-byteorder = "1.2.7"
 
 [build-dependencies]
 protoc-rust = "2.2.2"

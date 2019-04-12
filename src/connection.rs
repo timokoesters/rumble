@@ -1,4 +1,3 @@
-use byteorder::{BigEndian, ReadBytesExt};
 use openssl::ssl::*;
 use protobuf::CodedOutputStream;
 
@@ -72,13 +71,13 @@ impl Connection {
         let mut id_bytes = [0; 2];
         self.stream.read_exact(&mut id_bytes).ok()?;
 
-        let id = Cursor::new(id_bytes).read_u16::<BigEndian>().unwrap();
+        let id = u16::from_le_bytes(id_bytes);
 
         // The next four bytes specify the length of the message
         let mut length_bytes = [0; 4];
         self.stream.read_exact(&mut length_bytes).ok()?;
 
-        let length = Cursor::new(length_bytes).read_u32::<BigEndian>().unwrap();
+        let length = u32::from_le_bytes(length_bytes);
 
         // The rest of the message is the payload (length bytes)
         let mut payload = vec![0; length as usize];

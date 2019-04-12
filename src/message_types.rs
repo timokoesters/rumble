@@ -1,6 +1,6 @@
 use crate::mumble;
-use byteorder::{BigEndian, WriteBytesExt};
 use protobuf::{CodedInputStream, Message, ProtobufResult};
+use std::io::Write;
 
 /// An enum which contains all possible messages bundled together with it's content.
 #[derive(Debug)]
@@ -122,14 +122,14 @@ impl MessageType {
         let mut result = Vec::new();
 
         // Append id
-        result.write_u16::<BigEndian>(id).unwrap();
+        result.write(&id.to_be_bytes()).unwrap();
 
         // Create payload from message
         let mut payload = Vec::new();
         data.write_to_vec(&mut payload).unwrap();
 
         // Append length
-        result.write_u32::<BigEndian>(payload.len() as u32).unwrap();
+        result.write(&(payload.len() as u32).to_be_bytes()).unwrap();
 
         // Append payload
         result.append(&mut payload);
