@@ -6,7 +6,7 @@ use protobuf::{CodedInputStream, Message, ProtobufResult};
 #[derive(Debug)]
 pub enum MessageType {
     Version(mumble::Version),
-    UDPTunnel,
+    UDPTunnel(mumble::UDPTunnel),
     Authenticate(mumble::Authenticate),
     Ping(mumble::Ping),
     Reject(mumble::Reject),
@@ -47,7 +47,7 @@ impl MessageType {
 
         Ok(match id {
             0 => Version(Self::interpret_bytes::<mumble::Version>(&payload)?),
-            1 => UDPTunnel,
+            1 => UDPTunnel(Self::interpret_bytes::<mumble::UDPTunnel>(&payload)?),
             2 => Authenticate(Self::interpret_bytes::<mumble::Authenticate>(&payload)?),
             3 => Ping(Self::interpret_bytes::<mumble::Ping>(&payload)?),
             4 => Reject(Self::interpret_bytes::<mumble::Reject>(&payload)?),
@@ -80,7 +80,7 @@ impl MessageType {
             23 => RequestBlob(Self::interpret_bytes::<mumble::RequestBlob>(&payload)?),
             24 => ServerConfig(Self::interpret_bytes::<mumble::ServerConfig>(&payload)?),
             25 => SuggestConfig(Self::interpret_bytes::<mumble::SuggestConfig>(&payload)?),
-            _ => unreachable!(),
+            _ => panic!("Invalid id"),
         })
     }
 
@@ -89,6 +89,7 @@ impl MessageType {
         use crate::message_types::MessageType::*;
         match self {
             Version(data) => Self::create_bytes(0, data),
+            UDPTunnel(data) => Self::create_bytes(1, data),
             Authenticate(data) => Self::create_bytes(2, data),
             Ping(data) => Self::create_bytes(3, data),
             Reject(data) => Self::create_bytes(4, data),
@@ -113,7 +114,6 @@ impl MessageType {
             RequestBlob(data) => Self::create_bytes(23, data),
             ServerConfig(data) => Self::create_bytes(24, data),
             SuggestConfig(data) => Self::create_bytes(25, data),
-            _ => panic!("Cannot send this type of data"),
         }
     }
 

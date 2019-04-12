@@ -20,7 +20,7 @@ fn main() {
                 }
 
                 // Ignore some messages
-                UDPTunnel | Ping(_) => {}
+                UDPTunnel(_) | Ping(_) => {}
 
                 // Print unhandled messages
                 _ => println!("{:?}", message),
